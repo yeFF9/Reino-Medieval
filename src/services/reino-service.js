@@ -31,4 +31,32 @@ async function getById(id) {
   return reino;
 }
 
-module.exports = { list, create, getById };
+async function getEconomy(id) {
+  const reino = await prisma.reino.findUnique({ where: { id }, include: { economia: true } });
+  if (!reino) throw new HttpError(404, 'Reino não encontrado');
+  if (!reino.economia) throw new HttpError(404, 'Este reino ainda não possui economia registrada');
+  return reino.economia;
+}
+
+async function adjustEconomy(id, { modo, ouro, alimentos, ferro }) {
+  const reino = await prisma.reino.findUnique({ where: { id } });
+  if (!reino) throw new HttpError(404, 'Reino não encontrado');
+  const current = await prisma.economia.findUnique({ where: { reinoId: id } });
+  const base = current || { ouro: 0, alimentos: 0, ferro: 0 };
+  const values = { ouro, alimentos, ferro };
+
+  const next = {};
+  for (const field of ['ouro', 'alimentos', 'ferro']) {
+    if (values[field] !== undefined) {
+      next[field] = modo === 'DEFINIR' ? values[field] : base[field] + values[field];
+    }
+  }
+
+  return prisma.economia.upsert({
+    where: { reinoId: id },
+    update: next,
+    create: { reinoId: id, ouro: next.ouro ?? 0, alimentos: next.alimentos ?? 0, ferro: next.ferro ?? 0 },
+  });
+}
+
+module.exports = { list, create, getById, getEconomy, adjustEconomy };

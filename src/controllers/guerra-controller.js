@@ -8,4 +8,10 @@ async function history(req, res) {
   return res.json(await service.history(req.validated.query));
 }
 
-module.exports = { declare, history };
+async function finalize(req, res) {
+  return res.json({
+    data: await service.finalize({ guerraId: req.validated.params.id, vencedorId: req.validated.body.vencedorId }),
+  });
+}
+
+module.exports = { declare, history, finalize };

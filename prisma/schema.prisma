@@ -23,140 +23,146 @@ enum StatusDiplomacia {
 }
 
 model Usuario {
-  id           String     @id @default(uuid()) @db.Uuid
-  nome         String
-  email        String     @unique
-  senhaHash    String
-  ativo        Boolean    @default(true)
-  createdAt    DateTime   @default(now())
-  papeis       UsuarioPapel[]
+  id        String         @id @default(uuid()) @db.Uuid
+  nome      String
+  email     String         @unique
+  senhaHash String
+  ativo     Boolean        @default(true)
+  createdAt DateTime       @default(now())
+  papeis    UsuarioPapel[]
 }
 
 model Papel {
-  id           String          @id @default(uuid()) @db.Uuid
-  nome         String          @unique
-  usuarios     UsuarioPapel[]
-  permissoes   PapelPermissao[]
+  id         String           @id @default(uuid()) @db.Uuid
+  nome       String           @unique
+  usuarios   UsuarioPapel[]
+  permissoes PapelPermissao[]
 }
 
 model Permissao {
-  id           String          @id @default(uuid()) @db.Uuid
-  codigo       String          @unique
-  descricao    String
-  papeis       PapelPermissao[]
+  id        String           @id @default(uuid()) @db.Uuid
+  codigo    String           @unique
+  descricao String
+  papeis    PapelPermissao[]
 }
 
 model UsuarioPapel {
-  usuarioId    String   @db.Uuid
-  papelId      String   @db.Uuid
-  usuario      Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  papel        Papel    @relation(fields: [papelId], references: [id], onDelete: Cascade)
+  usuarioId String  @db.Uuid
+  papelId   String  @db.Uuid
+  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  papel     Papel   @relation(fields: [papelId], references: [id], onDelete: Cascade)
 
   @@id([usuarioId, papelId])
 }
 
 model PapelPermissao {
-  papelId      String     @db.Uuid
-  permissaoId  String     @db.Uuid
-  papel        Papel      @relation(fields: [papelId], references: [id], onDelete: Cascade)
-  permissao    Permissao  @relation(fields: [permissaoId], references: [id], onDelete: Cascade)
+  papelId     String    @db.Uuid
+  permissaoId String    @db.Uuid
+  papel       Papel     @relation(fields: [papelId], references: [id], onDelete: Cascade)
+  permissao   Permissao @relation(fields: [permissaoId], references: [id], onDelete: Cascade)
 
   @@id([papelId, permissaoId])
 }
 
 model Reino {
-  id             String       @id @default(uuid()) @db.Uuid
-  nome           String       @unique
-  descricao      String?
-  formaGoverno   String       @default("Monarquia")
-  createdAt      DateTime     @default(now())
-  economia       Economia?
-  territorios    Territorio[]
-  exercitos      Exercito[]
-  guerrasIniciadas Guerra[]   @relation("ReinoAtacante")
-  guerrasDefendidas Guerra[] @relation("ReinoDefensor")
-  vitorias       Guerra[]     @relation("ReinoVencedor")
-  diplomaciasA   Diplomacia[] @relation("DiplomaciaA")
-  diplomaciasB   Diplomacia[] @relation("DiplomaciaB")
-  leis             Lei[]
+  id                String       @id @default(uuid()) @db.Uuid
+  nome              String       @unique
+  descricao         String?
+  formaGoverno      String       @default("Monarquia")
+  createdAt         DateTime     @default(now())
+  economia          Economia?
+  territorios       Territorio[]
+  exercitos         Exercito[]
+  guerrasIniciadas  Guerra[]     @relation("ReinoAtacante")
+  guerrasDefendidas Guerra[]     @relation("ReinoDefensor")
+  vitorias          Guerra[]     @relation("ReinoVencedor")
+  diplomaciasA      Diplomacia[] @relation("DiplomaciaA")
+  diplomaciasB      Diplomacia[] @relation("DiplomaciaB")
+  leis              Lei[]
+  guildas           Guilda[]
+  tributosEnviados  Tributo[]    @relation("TributoOrigem")
+  tributosRecebidos Tributo[]    @relation("TributoDestino")
 }
 
 model Economia {
-  id            String   @id @default(uuid()) @db.Uuid
-  reinoId       String   @unique @db.Uuid
-  ouro          Float    @default(0)
-  alimentos     Float    @default(0)
-  ferro         Float    @default(0)
-  reino         Reino    @relation(fields: [reinoId], references: [id], onDelete: Cascade)
+  id        String @id @default(uuid()) @db.Uuid
+  reinoId   String @unique @db.Uuid
+  ouro      Float  @default(0)
+  alimentos Float  @default(0)
+  ferro     Float  @default(0)
+  reino     Reino  @relation(fields: [reinoId], references: [id], onDelete: Cascade)
 }
 
 model Territorio {
-  id            String      @id @default(uuid()) @db.Uuid
-  nome          String      @unique
-  descricao     String?
-  status        String      @default("CONTROLADO")
-  reinoId       String?     @db.Uuid
-  createdAt     DateTime    @default(now())
-  reino         Reino?      @relation(fields: [reinoId], references: [id], onDelete: SetNull)
-  cidades       Cidade[]
-  exercitos     Exercito[]
-  guerras       Guerra[]
-  castelo       Castelo?
-  impostos      Imposto[]
+  id        String     @id @default(uuid()) @db.Uuid
+  nome      String     @unique
+  descricao String?
+  status    String     @default("CONTROLADO")
+  reinoId   String?    @db.Uuid
+  createdAt DateTime   @default(now())
+  reino     Reino?     @relation(fields: [reinoId], references: [id], onDelete: SetNull)
+  cidades   Cidade[]
+  exercitos Exercito[]
+  guerras   Guerra[]
+  castelo   Castelo?
+  impostos  Imposto[]
 }
 
 model Cidade {
-  id                 String      @id @default(uuid()) @db.Uuid
-  nome               String      @unique
-  territorioId       String      @db.Uuid
-  populacao          Int         @default(100)
-  estoqueAlimentos   Float       @default(200)
-  estoqueRacoes      Float       @default(0)
-  producaoAgricola   Float       @default(0)
-  createdAt          DateTime    @default(now())
-  territorio         Territorio  @relation(fields: [territorioId], references: [id], onDelete: Cascade)
-  impostos           Imposto[]
+  id               String     @id @default(uuid()) @db.Uuid
+  nome             String     @unique
+  territorioId     String     @db.Uuid
+  populacao        Int        @default(100)
+  estoqueAlimentos Float      @default(200)
+  estoqueRacoes   Float      @default(0)
+  producaoAgricola Float      @default(0)
+  createdAt        DateTime   @default(now())
+  territorio       Territorio @relation(fields: [territorioId], references: [id], onDelete: Cascade)
+  impostos         Imposto[]
+  patrulhas        Patrulha[]
 
   @@index([territorioId])
 }
 
 model Comandante {
-  id          String      @id @default(uuid()) @db.Uuid
-  nome        String
-  patente     String
+  id           String     @id @default(uuid()) @db.Uuid
+  nome         String
+  patente      String
   nivelPatente Int
-  exercitos   Exercito[]
+  createdAt    DateTime   @default(now())
+  exercitos    Exercito[]
 }
 
 model Exercito {
-  id            String          @id @default(uuid()) @db.Uuid
-  nome          String
-  reinoId       String          @db.Uuid
-  territorioId  String          @db.Uuid
-  comandanteId  String          @db.Uuid
-  efetivo       Int
-  status        StatusExercito  @default(DISPONIVEL)
-  createdAt     DateTime        @default(now())
-  reino         Reino           @relation(fields: [reinoId], references: [id], onDelete: Cascade)
-  territorio    Territorio      @relation(fields: [territorioId], references: [id], onDelete: Restrict)
-  comandante    Comandante      @relation(fields: [comandanteId], references: [id], onDelete: Restrict)
+  id              String         @id @default(uuid()) @db.Uuid
+  nome            String
+  reinoId         String         @db.Uuid
+  territorioId    String         @db.Uuid
+  comandanteId    String         @db.Uuid
+  efetivo         Int
+  status          StatusExercito @default(DISPONIVEL)
+  custoManutencao Float          @default(0)
+  createdAt       DateTime       @default(now())
+  reino           Reino          @relation(fields: [reinoId], references: [id], onDelete: Cascade)
+  territorio      Territorio     @relation(fields: [territorioId], references: [id], onDelete: Restrict)
+  comandante      Comandante     @relation(fields: [comandanteId], references: [id], onDelete: Restrict)
 
   @@index([reinoId, status])
 }
 
 model Guerra {
-  id                String        @id @default(uuid()) @db.Uuid
-  reinoAtacanteId   String        @db.Uuid
-  reinoDefensorId   String        @db.Uuid
-  territorioId      String        @db.Uuid
-  status            StatusGuerra  @default(EM_ANDAMENTO)
-  vencedorId        String?       @db.Uuid
-  declaradaEm       DateTime      @default(now())
-  finalizadaEm      DateTime?
-  atacante          Reino         @relation("ReinoAtacante", fields: [reinoAtacanteId], references: [id], onDelete: Restrict)
-  defensor          Reino         @relation("ReinoDefensor", fields: [reinoDefensorId], references: [id], onDelete: Restrict)
-  territorio        Territorio    @relation(fields: [territorioId], references: [id], onDelete: Restrict)
-  vencedor          Reino?        @relation("ReinoVencedor", fields: [vencedorId], references: [id], onDelete: SetNull)
+  id              String       @id @default(uuid()) @db.Uuid
+  reinoAtacanteId String       @db.Uuid
+  reinoDefensorId String       @db.Uuid
+  territorioId    String       @db.Uuid
+  status          StatusGuerra @default(EM_ANDAMENTO)
+  vencedorId      String?      @db.Uuid
+  declaradaEm     DateTime     @default(now())
+  finalizadaEm    DateTime?
+  atacante        Reino        @relation("ReinoAtacante", fields: [reinoAtacanteId], references: [id], onDelete: Restrict)
+  defensor        Reino        @relation("ReinoDefensor", fields: [reinoDefensorId], references: [id], onDelete: Restrict)
+  territorio      Territorio   @relation(fields: [territorioId], references: [id], onDelete: Restrict)
+  vencedor        Reino?       @relation("ReinoVencedor", fields: [vencedorId], references: [id], onDelete: SetNull)
 
   @@index([status, declaradaEm])
 }
@@ -168,6 +174,7 @@ model Diplomacia {
   tipo        String
   status      StatusDiplomacia @default(ATIVA)
   createdAt   DateTime         @default(now())
+  encerradaEm DateTime?
   reinoA      Reino            @relation("DiplomaciaA", fields: [reinoAId], references: [id], onDelete: Cascade)
   reinoB      Reino            @relation("DiplomaciaB", fields: [reinoBId], references: [id], onDelete: Cascade)
 
@@ -176,28 +183,93 @@ model Diplomacia {
 }
 
 model Imposto {
-  id              String      @id @default(uuid()) @db.Uuid
-  territorioId    String?     @db.Uuid
-  cidadeId        String?     @db.Uuid
-  periodoFiscal   String
-  valor           Float
-  aplicadoEm      DateTime    @default(now())
-  territorio      Territorio? @relation(fields: [territorioId], references: [id], onDelete: Cascade)
-  cidade          Cidade?     @relation(fields: [cidadeId], references: [id], onDelete: Cascade)
+  id            String      @id @default(uuid()) @db.Uuid
+  territorioId  String?     @db.Uuid
+  cidadeId      String?     @db.Uuid
+  periodoFiscal String
+  valor         Float
+  aplicadoEm    DateTime    @default(now())
+  territorio    Territorio? @relation(fields: [territorioId], references: [id], onDelete: Cascade)
+  cidade        Cidade?     @relation(fields: [cidadeId], references: [id], onDelete: Cascade)
 
   @@unique([territorioId, periodoFiscal])
   @@unique([cidadeId, periodoFiscal])
 }
 
 model Castelo {
-  id                  String      @id @default(uuid()) @db.Uuid
-  territorioId        String      @unique @db.Uuid
-  capacidadeGuardas   Int
-  guardasAtuais       Int         @default(0)
-  nivelMuralha        Int         @default(1)
-  integridade         Float       @default(100.0)
-  createdAt           DateTime    @default(now())
-  territorio          Territorio  @relation(fields: [territorioId], references: [id], onDelete: Cascade)
+  id                String     @id @default(uuid()) @db.Uuid
+  territorioId      String     @unique @db.Uuid
+  capacidadeGuardas Int
+  guardasAtuais     Int        @default(0)
+  nivelMuralha      Int        @default(1)
+  integridade       Float      @default(100.0)
+  createdAt         DateTime   @default(now())
+  territorio        Territorio @relation(fields: [territorioId], references: [id], onDelete: Cascade)
+}
+
+model Patrulha {
+  id          String   @id @default(uuid()) @db.Uuid
+  cidadeId    String   @db.Uuid
+  contingente Int
+  createdAt   DateTime @default(now())
+  cidade      Cidade   @relation(fields: [cidadeId], references: [id], onDelete: Cascade)
+
+  @@index([cidadeId])
+}
+
+model Guilda {
+  id         String         @id @default(uuid()) @db.Uuid
+  nome       String         @unique
+  oficio     String
+  reinoId    String         @db.Uuid
+  createdAt  DateTime       @default(now())
+  reino      Reino          @relation(fields: [reinoId], references: [id], onDelete: Cascade)
+  membros    GuildaMembro[]
+  encomendas Encomenda[]
+
+  @@index([reinoId, oficio])
+}
+
+model GuildaMembro {
+  id            String   @id @default(uuid()) @db.Uuid
+  guildaId      String   @db.Uuid
+  nome          String
+  especialidade String
+  createdAt     DateTime @default(now())
+  guilda        Guilda   @relation(fields: [guildaId], references: [id], onDelete: Cascade)
+
+  @@index([guildaId])
+}
+
+model Encomenda {
+  id         String   @id @default(uuid()) @db.Uuid
+  guildaId   String   @db.Uuid
+  item       String
+  quantidade Int
+  custoOuro  Float
+  custoFerro Float
+  status     String   @default("PENDENTE")
+  createdAt  DateTime @default(now())
+  guilda     Guilda   @relation(fields: [guildaId], references: [id], onDelete: Cascade)
+
+  @@index([guildaId, status])
+}
+
+model Tributo {
+  id             String   @id @default(uuid()) @db.Uuid
+  reinoOrigemId  String   @db.Uuid
+  reinoDestinoId String   @db.Uuid
+  tipo           String
+  ouro           Float    @default(0)
+  alimentos      Float    @default(0)
+  ferro          Float    @default(0)
+  status         String   @default("ENVIADO")
+  createdAt      DateTime @default(now())
+  reinoOrigem    Reino    @relation("TributoOrigem", fields: [reinoOrigemId], references: [id], onDelete: Cascade)
+  reinoDestino   Reino    @relation("TributoDestino", fields: [reinoDestinoId], references: [id], onDelete: Cascade)
+
+  @@index([reinoOrigemId, status])
+  @@index([reinoDestinoId])
 }
 
 enum StatusLei {
@@ -206,13 +278,13 @@ enum StatusLei {
 }
 
 model Lei {
-  id          String     @id @default(uuid()) @db.Uuid
-  titulo      String
-  descricao   String?
-  status      StatusLei  @default(ATIVA)
-  reinoId     String     @db.Uuid
-  createdAt   DateTime   @default(now())
-  reino       Reino      @relation(fields: [reinoId], references: [id], onDelete: Cascade)
+  id        String    @id @default(uuid()) @db.Uuid
+  titulo    String
+  descricao String?
+  status    StatusLei @default(ATIVA)
+  reinoId   String    @db.Uuid
+  createdAt DateTime  @default(now())
+  reino     Reino     @relation(fields: [reinoId], references: [id], onDelete: Cascade)
 
   @@unique([reinoId, titulo])
 }

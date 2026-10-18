@@ -6,11 +6,15 @@ const listParameters = [
 ];
 const bearer = [{ bearerAuth: [] }];
 const response = (description) => ({ description });
-const listOperation = (tag, summary, filters) => ({
+const listOperation = (tag, summary, filters, pathParams = []) => ({
   tags: [tag],
   summary,
   security: bearer,
-  parameters: [...listParameters, ...filters.map((filter) => ({ name: filter, in: 'query', schema: { type: 'string' } }))],
+  parameters: [
+    ...pathParams,
+    ...listParameters,
+    ...filters.map((filter) => ({ name: filter, in: 'query', schema: { type: 'string' } })),
+  ],
   responses: { 200: response('Lista paginada'), 401: response('Não autenticado'), 403: response('Sem permissão') },
 });
 const secured = (tag, summary, code = '200') => ({
@@ -27,6 +31,7 @@ const bodyOperation = (tag, summary, schemaName, code = '201') => ({
   },
 });
 const idParameter = { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } };
+const reinoPathParameter = { name: 'reinoId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } };
 
 const definition = {
   openapi: '3.0.3',
@@ -90,6 +95,83 @@ const definition = {
           reinoAtacanteId: { type: 'string', format: 'uuid' },
           reinoDefensorId: { type: 'string', format: 'uuid' },
           territorioId: { type: 'string', format: 'uuid' },
+        },
+      },
+      GuerraFinalizeInput: {
+        type: 'object', required: ['vencedorId'],
+        properties: { vencedorId: { type: 'string', format: 'uuid' } },
+      },
+      ComandanteInput: {
+        type: 'object', required: ['nome', 'patente', 'nivelPatente'],
+        properties: {
+          nome: { type: 'string' }, patente: { type: 'string' },
+          nivelPatente: { type: 'integer', minimum: 1, maximum: 10 },
+        },
+      },
+      ComandantePromocao: {
+        type: 'object', required: ['nivelPatente'],
+        properties: {
+          nivelPatente: { type: 'integer', minimum: 1, maximum: 10 },
+          patente: { type: 'string' },
+        },
+      },
+      DesignarComandanteInput: {
+        type: 'object', required: ['comandanteId'],
+        properties: { comandanteId: { type: 'string', format: 'uuid' } },
+      },
+      PatrulhaInput: {
+        type: 'object', required: ['cidadeId', 'contingente'],
+        properties: {
+          cidadeId: { type: 'string', format: 'uuid' },
+          contingente: { type: 'integer', minimum: 1 },
+        },
+      },
+      PactoInput: {
+        type: 'object', required: ['reinoAId', 'reinoBId', 'tipo'],
+        properties: {
+          reinoAId: { type: 'string', format: 'uuid' },
+          reinoBId: { type: 'string', format: 'uuid' },
+          tipo: { type: 'string', enum: ['ALIANCA', 'PACTO_NAO_AGRESSAO', 'ACORDO_COMERCIAL'] },
+        },
+      },
+      TributoInput: {
+        type: 'object', required: ['reinoOrigemId', 'reinoDestinoId'],
+        properties: {
+          reinoOrigemId: { type: 'string', format: 'uuid' },
+          reinoDestinoId: { type: 'string', format: 'uuid' },
+          tipo: { type: 'string', enum: ['VASSALAGEM', 'OFERENDA_PAZ'] },
+          ouro: { type: 'number', minimum: 0 },
+          alimentos: { type: 'number', minimum: 0 },
+          ferro: { type: 'number', minimum: 0 },
+        },
+      },
+      GuildaInput: {
+        type: 'object', required: ['nome', 'oficio', 'reinoId'],
+        properties: {
+          nome: { type: 'string' }, oficio: { type: 'string' }, reinoId: { type: 'string', format: 'uuid' },
+          membros: {
+            type: 'array',
+            items: {
+              type: 'object', required: ['nome', 'especialidade'],
+              properties: { nome: { type: 'string' }, especialidade: { type: 'string' } },
+            },
+          },
+        },
+      },
+      GuildaEncomendaInput: {
+        type: 'object', required: ['item', 'quantidade'],
+        properties: {
+          item: { type: 'string', enum: ['ARMAS', 'ARMADURAS', 'MATERIAIS_CONSTRUCAO'] },
+          quantidade: { type: 'integer', minimum: 1 },
+        },
+      },
+      EconomiaUpdate: {
+        type: 'object', minProperties: 1,
+        properties: {
+          modo: { type: 'string', enum: ['CREDITAR', 'DEFINIR'] },
+          ouro: { type: 'number', minimum: 0 },
+          alimentos: { type: 'number', minimum: 0 },
+          ferro: { type: 'number', minimum: 0 },
         },
       },
       LeiInput: {
@@ -158,6 +240,10 @@ const definition = {
         responses: { 200: response('Reino'), 401: response('Não autenticado'), 403: response('Sem permissão'), 404: response('Não encontrado') },
       },
     },
+    '/reinos/{id}/economia': {
+      get: { ...secured('Reinos', 'Consultar a economia do reino'), parameters: [idParameter] },
+      patch: { ...bodyOperation('Reinos', 'Ajustar recursos do reino', 'EconomiaUpdate', '200'), parameters: [idParameter] },
+    },
     '/territorios': {
       get: listOperation('Territórios', 'Listar territórios', ['nome', 'status', 'reinoId']),
       post: bodyOperation('Territórios', 'Criar território', 'TerritorioInput'),
@@ -176,8 +262,62 @@ const definition = {
     '/exercitos/{id}/mobilizar': {
       patch: { ...secured('Exércitos', 'Mobilizar exército com débito de recursos'), parameters: [idParameter] },
     },
+    '/exercitos/{id}/desmobilizar': {
+      patch: { ...secured('Exército, Guardas e Patentes', 'Desmobilizar exército e zerar a manutenção'), parameters: [idParameter] },
+    },
+    '/exercitos/{id}/designar-comandante': {
+      patch: { ...bodyOperation('Exército, Guardas e Patentes', 'Designar comandante para um exército', 'DesignarComandanteInput', '200'), parameters: [idParameter] },
+    },
     '/guerras/declarar': { post: bodyOperation('Guerras e Diplomacia', 'Declarar guerra respeitando pactos de não agressão', 'GuerraInput') },
     '/guerras/historico': { get: listOperation('Guerras e Diplomacia', 'Consultar histórico de guerras', ['reinoId', 'status']) },
+    '/guerras/{id}/finalizar': {
+      patch: { ...bodyOperation('Guerras e Diplomacia', 'Finalizar guerra e transferir o território ao vencedor', 'GuerraFinalizeInput', '200'), parameters: [idParameter] },
+    },
+    '/comandantes': {
+      get: listOperation('Exército, Guardas e Patentes', 'Listar comandantes', ['nome', 'patente', 'nivelPatenteMinimo']),
+      post: bodyOperation('Exército, Guardas e Patentes', 'Registrar ou nomear comandante', 'ComandanteInput'),
+    },
+    '/comandantes/{id}': {
+      get: {
+        ...secured('Exército, Guardas e Patentes', 'Consultar comandante'),
+        parameters: [idParameter],
+        responses: { 200: response('Comandante'), 401: response('Não autenticado'), 403: response('Sem permissão'), 404: response('Não encontrado') },
+      },
+    },
+    '/comandantes/{id}/promover': {
+      patch: { ...bodyOperation('Exército, Guardas e Patentes', 'Promover a patente de um comandante', 'ComandantePromocao', '200'), parameters: [idParameter] },
+    },
+    '/guardas/patrulhas': {
+      post: bodyOperation('Exército, Guardas e Patentes', 'Alocar contingente de guardas em patrulha', 'PatrulhaInput'),
+    },
+    '/diplomacia/pactos': {
+      post: bodyOperation('Diplomacia e Acordos', 'Selar pacto de aliança, não agressão ou acordo comercial', 'PactoInput'),
+    },
+    '/diplomacia/pactos/{reinoId}': {
+      get: listOperation('Diplomacia e Acordos', 'Listar acordos vigentes de um reino', ['status', 'tipo'], [reinoPathParameter]),
+    },
+    '/diplomacia/pactos/{id}/romper': {
+      delete: { ...secured('Diplomacia e Acordos', 'Romper pacto com penalização opcional', '200'), parameters: [idParameter] },
+    },
+    '/diplomacia/tributos/enviar': {
+      post: bodyOperation('Diplomacia e Acordos', 'Enviar tributo de vassalagem ou oferenda de paz', 'TributoInput'),
+    },
+    '/guildas': {
+      post: bodyOperation('Guildas e Ofícios', 'Fundar guilda oficial no reino', 'GuildaInput'),
+    },
+    '/guildas/{id}': {
+      get: {
+        ...secured('Guildas e Ofícios', 'Consultar guilda'),
+        parameters: [idParameter],
+        responses: { 200: response('Guilda'), 401: response('Não autenticado'), 403: response('Sem permissão'), 404: response('Não encontrado') },
+      },
+    },
+    '/guildas/{id}/membros': {
+      get: listOperation('Guildas e Ofícios', 'Listar membros de uma guilda', [], [idParameter]),
+    },
+    '/guildas/{id}/encomendas': {
+      post: { ...bodyOperation('Guildas e Ofícios', 'Encomendar produção em massa com débito de recursos', 'GuildaEncomendaInput'), parameters: [idParameter] },
+    },
     '/leis': {
       get: listOperation('Monarquia e Leis', 'Listar leis do reino', ['titulo', 'reinoId', 'status']),
       post: bodyOperation('Monarquia e Leis', 'Decreta uma nova lei ou decreto', 'LeiInput'),

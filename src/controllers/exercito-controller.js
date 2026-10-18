@@ -12,4 +12,12 @@ async function mobilize(req, res) {
   return res.json({ data: await service.mobilize(req.validated.params.id) });
 }
 
-module.exports = { list, create, mobilize };
+async function desmobilizar(req, res) {
+  return res.json({ data: await service.desmobilizar(req.validated.params.id) });
+}
+
+async function designarComandante(req, res) {
+  return res.json({ data: await service.designarComandante(req.validated.params.id, req.validated.body) });
+}
+
+module.exports = { list, create, mobilize, desmobilizar, designarComandante };

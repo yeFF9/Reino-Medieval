@@ -12,4 +12,12 @@ async function getById(req, res) {
   return res.json({ data: await service.getById(req.validated.params.id) });
 }
 
-module.exports = { list, create, getById };
+async function getEconomy(req, res) {
+  return res.json({ data: await service.getEconomy(req.validated.params.id) });
+}
+
+async function updateEconomy(req, res) {
+  return res.json({ data: await service.adjustEconomy(req.validated.params.id, req.validated.body) });
+}
+
+module.exports = { list, create, getById, getEconomy, updateEconomy };

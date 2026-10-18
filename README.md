@@ -21,9 +21,9 @@ npm run dev
 
 `npm run db:setup` gera o Prisma Client, aplica migrations existentes e carrega os dados de demonstração. Para desenvolvimento de schema, use `npm run db:migrate -- --name descricao`.
 
-- API: `http://localhost:3000/api/v1`
-- Swagger UI: `http://localhost:3000/api-docs`
-- Health check: `http://localhost:3000/health`
+- API: [`http://localhost:3000/api/v1`](http://localhost:3000/api/v1)
+- Swagger UI: [`http://localhost:3000/api-docs`](http://localhost:3000/api-docs)
+- Health check: [`http://localhost:3000/health`](http://localhost:3000/health)
 
 Conta local criada pelo seed: `admin@eldoria.test` / `Eldoria123!`. Credencial somente para demonstração acadêmica; altere-a antes de qualquer uso compartilhado ou implantação.
 
@@ -44,8 +44,26 @@ Conta local criada pelo seed: `admin@eldoria.test` / `Eldoria123!`. Credencial s
 | GET | `/exercitos` | `exercitos:read` |
 | POST | `/exercitos` | `exercitos:write` |
 | PATCH | `/exercitos/:id/mobilizar` | `exercitos:write` |
+| PATCH | `/exercitos/:id/designar-comandante` | `exercitos:write` |
+| PATCH | `/exercitos/:id/desmobilizar` | `exercitos:write` |
 | POST | `/guerras/declarar` | `guerras:write` |
 | GET | `/guerras/historico` | `guerras:read` |
+| PATCH | `/guerras/:id/finalizar` | `guerras:write` |
+| GET | `/comandantes` | `comandantes:read` |
+| POST | `/comandantes` | `comandantes:write` |
+| GET | `/comandantes/:id` | `comandantes:read` |
+| PATCH | `/comandantes/:id/promover` | `comandantes:write` |
+| POST | `/guardas/patrulhas` | `guardas:write` |
+| POST | `/diplomacia/pactos` | `diplomacia:write` |
+| GET | `/diplomacia/pactos/:reinoId` | `diplomacia:read` |
+| DELETE | `/diplomacia/pactos/:id/romper` | `diplomacia:write` |
+| POST | `/diplomacia/tributos/enviar` | `diplomacia:write` |
+| POST | `/guildas` | `guildas:write` |
+| GET | `/guildas/:id` | `guildas:read` |
+| GET | `/guildas/:id/membros` | `guildas:read` |
+| POST | `/guildas/:id/encomendas` | `guildas:write` |
+| GET | `/reinos/:id/economia` | `economia:read` |
+| PATCH | `/reinos/:id/economia` | `economia:write` |
 | GET | `/cidades/:id/populacao` | `cidades:read` |
 | GET | `/cidades/:id/populacao/mapa-fome` | `cidades:read` |
 | GET | `/cidades/:id/populacao/satisfacao` | `cidades:read` |
@@ -75,7 +93,12 @@ Todas as listagens recebem `page` e `limit` (padrões 1 e 20, máximo 100) e fil
 - Conversão de suprimentos e colheitas agrícolas gerenciam o inventário de alimentos e a reserva mínima de rações militares por cidade.
 - Decretos e leis ativas mantêm integridade de estado (revogação/alteração); arrecadações fiscais respeitam períodos vigentes.
 - Construção, reparo e melhorias em castelos consomem recursos de infraestrutura e validam os limites estruturais de muralhas e guarnições.
-- Declaração de guerra rejeita pactos ativos de aliança/não agressão. `finalize` transfere o território ao vencedor na mesma transação que finaliza a guerra; `finalize` e as rotinas administrativas seguintes são operações internas, pois não há rota extra fora dos 15 endpoints solicitados.
+- Declaração de guerra rejeita pactos ativos de aliança/não agressão. `finalize` transfere o território ao vencedor na mesma transação que finaliza a guerra, sendo exposta pela rota `PATCH /guerras/:id/finalizar`.
 - `applyTax` impede imposto repetido por alvo/período fiscal; `createDiplomaticAgreement` impede acordos entre reinos em guerra direta; `setCastleGuards` respeita o limite estrutural do castelo.
+- `promote` exige que a nova patente seja superior à atual; `designarComandante` reutiliza a patente mínima (`3`) exigida na criação de exércitos.
+- `deployPatrol` retira os guardas do contingente do castelo do território da cidade em transação serializável; `desmobilizar` zera o `custoManutencao` do exército.
+- `breakPact` encerra o acordo e, se um reino for informado, aplica a penalização em ouro (`DIPLOMACY_BREAK_PENALTY_OURO`, padrão 50); `sendTribute` transfere ouro, alimentos e ferro entre as economias em transação serializável.
+- `createOrder` calcula o custo por item (`ARMAS`, `ARMADURAS`, `MATERIAIS_CONSTRUCAO`) e debita ouro e ferro do reino da guilda.
+- `adjustEconomy` credita (padrão) ou define os recursos do reino; `finalize` transfere o território disputado ao vencedor.
 
 As rotinas internas estão em `src/services`; o schema, migration inicial e dados fictícios estão em `prisma/`.
