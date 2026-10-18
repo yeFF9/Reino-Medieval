@@ -109,8 +109,9 @@ model Cidade {
   id                 String      @id @default(uuid()) @db.Uuid
   nome               String      @unique
   territorioId       String      @db.Uuid
-  populacao          Int
-  estoqueAlimentos   Float
+  populacao          Int         @default(100)
+  estoqueAlimentos   Float       @default(200)
+  estoqueRacoes      Float       @default(0)
   producaoAgricola   Float       @default(0)
   createdAt          DateTime    @default(now())
   territorio         Territorio  @relation(fields: [territorioId], references: [id], onDelete: Cascade)

@@ -126,6 +126,21 @@ const definition = {
           reinoId: { type: 'string', format: 'uuid' },
         },
       },
+      ColheitaInput: {
+        type: 'object',
+        required: ['cidadeId', 'quantidadeBruta'],
+        properties: {
+          cidadeId: { type: 'string', format: 'uuid' },
+          quantidadeBruta: { type: 'number', minimum: 1 },
+        },
+      },
+      ConversaoRacaoInput: {
+        type: 'object',
+        required: ['percentualRacao'],
+        properties: {
+          percentualRacao: { type: 'number', minimum: 0, maximum: 100, description: 'Percentual da colheita convertido em ração (ex: 50 para 50%)' },
+        },
+      },
     },
   },
   
@@ -197,6 +212,51 @@ const definition = {
     '/castelos/{id}/reparar': {
       post: {
         ...bodyOperation('Castelos', 'Aplica reparos à estrutura do castelo', 'RecursoReinoInput', '200'),
+        parameters: [idParameter],
+      },
+    },
+    '/cidades/{id}/populacao': {
+      get: {
+        ...secured('População', 'Consulta censo demográfico da cidade'),
+        parameters: [idParameter],
+      },
+    },
+    '/cidades/{id}/populacao/mapa-fome': {
+      get: {
+        ...secured('População', 'Avalia o nível de segurança alimentar e a média de refeições diárias'),
+        parameters: [idParameter],
+      },
+    },
+    '/cidades/{id}/populacao/satisfacao': {
+      get: {
+        ...secured('População', 'Calcula o índice de satisfação popular (0-10) e a chance de revolta'),
+        parameters: [idParameter],
+      },
+    },
+    '/agricultura/colheitas': {
+      post: bodyOperation('Agricultura', 'Regista a entrada de grãos brutos colhidos', 'ColheitaInput'),
+    },
+    '/cidades/{id}/agricultura': {
+      get: {
+        ...secured('Agricultura', 'Consulta produção atual e estoque agrícola da cidade'),
+        parameters: [idParameter],
+      },
+    },
+    '/cidades/{id}/suprimentos': {
+      get: {
+        ...secured('Suprimentos', 'Verifica inventário de alimentos e alerta de reserva mínima'),
+        parameters: [idParameter],
+      },
+    },
+    '/cidades/{id}/racoes': {
+      get: {
+        ...secured('Suprimentos', 'Consulta o estoque exclusivo de rações militares'),
+        parameters: [idParameter],
+      },
+    },
+    '/cidades/{id}/suprimentos/converter': {
+      put: {
+        ...bodyOperation('Suprimentos', 'Converte percentual da colheita em rações militares', 'ConversaoRacaoInput', '200'),
         parameters: [idParameter],
       },
     },

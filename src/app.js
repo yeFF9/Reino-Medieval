@@ -21,6 +21,9 @@ app.use('/api/v1/exercitos', require('./routes/exercito-routes'));
 app.use('/api/v1/guerras', require('./routes/guerra-routes'));
 app.use('/api/v1/leis', require('./routes/leis-routes'));
 app.use('/api/v1/castelos', require('./routes/castelo-routes'));
+app.use('/api/v1', require('./routes/populacao-routes'));
+app.use('/api/v1', require('./routes/agricultura-routes'));
+app.use('/api/v1', require('./routes/suprimento-routes'));
 
 app.use((req, res) => res.status(404).json({ error: 'Rota não encontrada' }));
 app.use(errorHandler);
