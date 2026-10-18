@@ -78,6 +78,7 @@ model Reino {
   vitorias       Guerra[]     @relation("ReinoVencedor")
   diplomaciasA   Diplomacia[] @relation("DiplomaciaA")
   diplomaciasB   Diplomacia[] @relation("DiplomaciaB")
+  leis             Lei[]
 }
 
 model Economia {
@@ -192,5 +193,25 @@ model Castelo {
   territorioId        String      @unique @db.Uuid
   capacidadeGuardas   Int
   guardasAtuais       Int         @default(0)
+  nivelMuralha        Int         @default(1)
+  integridade         Float       @default(100.0)
+  createdAt           DateTime    @default(now())
   territorio          Territorio  @relation(fields: [territorioId], references: [id], onDelete: Cascade)
+}
+
+enum StatusLei {
+  ATIVA
+  REVOGADA
+}
+
+model Lei {
+  id          String     @id @default(uuid()) @db.Uuid
+  titulo      String
+  descricao   String?
+  status      StatusLei  @default(ATIVA)
+  reinoId     String     @db.Uuid
+  createdAt   DateTime   @default(now())
+  reino       Reino      @relation(fields: [reinoId], references: [id], onDelete: Cascade)
+
+  @@unique([reinoId, titulo])
 }

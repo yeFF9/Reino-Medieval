@@ -111,6 +111,21 @@ const definition = {
           descricao: { type: 'string' },
         },
       },
+      CasteloInput: {
+        type: 'object',
+        required: ['territorioId', 'capacidadeGuardas'],
+        properties: {
+          territorioId: { type: 'string', format: 'uuid' },
+          capacidadeGuardas: { type: 'integer', minimum: 1 },
+        },
+      },
+      RecursoReinoInput: {
+        type: 'object',
+        required: ['reinoId'],
+        properties: {
+          reinoId: { type: 'string', format: 'uuid' },
+        },
+      },
     },
   },
   
@@ -163,6 +178,27 @@ const definition = {
     },
     '/impostos/historico': {
       get: listOperation('Monarquia e Leis', 'Consulta o histórico financeiro de arrecadação de tributos', ['reinoId', 'periodoFiscal']),
+    },
+    '/castelos': {
+      post: bodyOperation('Castelos', 'Registra a construção de um novo castelo', 'CasteloInput'),
+    },
+    '/castelos/{id}': {
+      get: {
+        ...secured('Castelos', 'Detalhes de integridade, nível de muralha e guarnição'),
+        parameters: [idParameter],
+      },
+    },
+    '/castelos/{id}/melhorar': {
+      patch: {
+        ...bodyOperation('Castelos', 'Realiza upgrade na infraestrutura consumindo recursos', 'RecursoReinoInput', '200'),
+        parameters: [idParameter],
+      },
+    },
+    '/castelos/{id}/reparar': {
+      post: {
+        ...bodyOperation('Castelos', 'Aplica reparos à estrutura do castelo', 'RecursoReinoInput', '200'),
+        parameters: [idParameter],
+      },
     },
   },
 };

@@ -1,4 +1,4 @@
-const leiService = require('../services/lei-service');
+const leiService = require('../services/leis-service');
 
 async function ListarLeis(req, res, next) {
   try {

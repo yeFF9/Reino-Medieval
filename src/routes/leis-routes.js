@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const controller = require('../controllers/lei-controller');
+const controller = require('../controllers/leis-controller');
 const authenticate = require('../middlewares/authenticate');
 const authorize = require('../middlewares/authorize');
 const validate = require('../middlewares/validate');
