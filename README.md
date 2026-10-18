@@ -46,6 +46,24 @@ Conta local criada pelo seed: `admin@eldoria.test` / `Eldoria123!`. Credencial s
 | PATCH | `/exercitos/:id/mobilizar` | `exercitos:write` |
 | POST | `/guerras/declarar` | `guerras:write` |
 | GET | `/guerras/historico` | `guerras:read` |
+| PATCH | `/guerras/:id/finalizar` | `guerras:write` |
+| GET | `/comandantes` | `comandantes:read` |
+| POST | `/comandantes` | `comandantes:write` |
+| GET | `/comandantes/:id` | `comandantes:read` |
+| PATCH | `/comandantes/:id/promover` | `comandantes:write` |
+| PATCH | `/exercitos/:id/designar-comandante` | `exercitos:write` |
+| PATCH | `/exercitos/:id/desmobilizar` | `exercitos:write` |
+| POST | `/guardas/patrulhas` | `guardas:write` |
+| POST | `/diplomacia/pactos` | `diplomacia:write` |
+| GET | `/diplomacia/pactos/:reinoId` | `diplomacia:read` |
+| DELETE | `/diplomacia/pactos/:id/romper` | `diplomacia:write` |
+| POST | `/diplomacia/tributos/enviar` | `diplomacia:write` |
+| POST | `/guildas` | `guildas:write` |
+| GET | `/guildas/:id` | `guildas:read` |
+| GET | `/guildas/:id/membros` | `guildas:read` |
+| POST | `/guildas/:id/encomendas` | `guildas:write` |
+| GET | `/reinos/:id/economia` | `economia:read` |
+| PATCH | `/reinos/:id/economia` | `economia:write` |
 
 Todas as listagens recebem `page` e `limit` (padrões 1 e 20, máximo 100) e filtros documentados no Swagger. O token deve ser enviado como `Authorization: Bearer <JWT>`.
 
@@ -54,7 +72,12 @@ Todas as listagens recebem `page` e `limit` (padrões 1 e 20, máximo 100) e fil
 - Territórios têm uma única relação de propriedade `reinoId`; o serviço valida o reino e a FK impede proprietários inexistentes.
 - Mobilização valida o comandante, o pertencimento territorial e os recursos mínimos, debitando ouro, alimentos e ferro em transação serializável.
 - Criação da cidade verifica o estoque mínimo configurável (`MIN_CITY_FOOD_STOCK`) e calcula produção inicial proporcional à população. `changeCityPopulation` recalcula a produção quando a população mudar.
-- Declaração de guerra rejeita pactos ativos de aliança/não agressão. `finalize` transfere o território ao vencedor na mesma transação que finaliza a guerra; `finalize` e as rotinas administrativas seguintes são operações internas, pois não há rota extra fora dos 15 endpoints solicitados.
+- Declaração de guerra rejeita pactos ativos de aliança/não agressão. `finalize` transfere o território ao vencedor na mesma transação que finaliza a guerra e agora é exposta por `PATCH /guerras/:id/finalizar`.
 - `applyTax` impede imposto repetido por alvo/período fiscal; `createDiplomaticAgreement` impede acordos entre reinos em guerra direta; `setCastleGuards` respeita o limite estrutural do castelo.
+- `promote` exige que a nova patente seja superior à atual; `designarComandante` reutiliza a patente mínima (`3`) exigida na criação de exércitos.
+- `deployPatrol` retira os guardas do contingente do castelo do território da cidade em transação serializável; `desmobilizar` zera o `custoManutencao` do exército.
+- `breakPact` encerra o acordo e, se um reino for informado, aplica a penalização em ouro (`DIPLOMACY_BREAK_PENALTY_OURO`, padrão 50); `sendTribute` transfere ouro, alimentos e ferro entre as economias em transação serializável.
+- `createOrder` calcula o custo por item (`ARMAS`, `ARMADURAS`, `MATERIAIS_CONSTRUCAO`) e debita ouro e ferro do reino da guilda.
+- `adjustEconomy` credita (padrão) ou define os recursos do reino; `finalize` transfere o território disputado ao vencedor.
 
 As rotinas internas estão em `src/services`; o schema, migration inicial e dados fictícios estão em `prisma/`.
