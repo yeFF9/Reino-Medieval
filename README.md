@@ -25,7 +25,7 @@ npm run dev
 - Swagger UI: `http://localhost:3000/api-docs`
 - Health check: `http://localhost:3000/health`
 
-Conta local criada pelo seed: `admin@eldoria.test` / `Eldoria123!`. Credencial somente para demonstração acadêmica; altere-a antes de qualquer uso compartilhado ou implantação.
+Conta local criada pelo seed: `admin@eldoria.test` / `Eldoria123!`.
 
 ## Rotas
 
