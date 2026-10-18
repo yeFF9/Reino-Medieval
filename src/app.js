@@ -19,6 +19,10 @@ app.use('/api/v1/territorios', require('./routes/territorio-routes'));
 app.use('/api/v1/cidades', require('./routes/cidade-routes'));
 app.use('/api/v1/exercitos', require('./routes/exercito-routes'));
 app.use('/api/v1/guerras', require('./routes/guerra-routes'));
+app.use('/api/v1/comandantes', require('./routes/comandante-routes'));
+app.use('/api/v1/guardas', require('./routes/guarda-routes'));
+app.use('/api/v1/diplomacia', require('./routes/diplomacia-routes'));
+app.use('/api/v1/guildas', require('./routes/guilda-routes'));
 
 app.use((req, res) => res.status(404).json({ error: 'Rota não encontrada' }));
 app.use(errorHandler);
