@@ -92,8 +92,28 @@ const definition = {
           territorioId: { type: 'string', format: 'uuid' },
         },
       },
+      LeiInput: {
+        type: 'object',
+        required: ['titulo', 'reinoId'],
+        properties: {
+          titulo: { type: 'string', minLength: 2 },
+          descricao: { type: 'string' },
+          reinoId: { type: 'string', format: 'uuid' },
+        },
+      },
+      ImpostoInput: {
+        type: 'object',
+        required: ['reinoId', 'periodoFiscal', 'valor'],
+        properties: {
+          reinoId: { type: 'string', format: 'uuid' },
+          periodoFiscal: { type: 'string' },
+          valor: { type: 'number', minimum: 0 },
+          descricao: { type: 'string' },
+        },
+      },
     },
   },
+  
   paths: {
     '/auth/login': { post: bodyOperation('Autenticação', 'Autenticar e obter JWT', 'LoginRequest', '200') },
     '/auth/register': { post: bodyOperation('Autenticação', 'Registrar conta de leitor', 'RegisterRequest') },
@@ -128,6 +148,22 @@ const definition = {
     },
     '/guerras/declarar': { post: bodyOperation('Guerras e Diplomacia', 'Declarar guerra respeitando pactos de não agressão', 'GuerraInput') },
     '/guerras/historico': { get: listOperation('Guerras e Diplomacia', 'Consultar histórico de guerras', ['reinoId', 'status']) },
+    '/leis': {
+      get: listOperation('Monarquia e Leis', 'Listar leis do reino', ['titulo', 'reinoId', 'status']),
+      post: bodyOperation('Monarquia e Leis', 'Decreta uma nova lei ou decreto', 'LeiInput'),
+    },
+    '/leis/{id}/revogar': {
+      put: {
+        ...secured('Monarquia e Leis', 'Revoga ou altera o estado de uma lei ativa', '200'),
+        parameters: [idParameter],
+      },
+    },
+    '/impostos/aplicar': {
+      post: bodyOperation('Monarquia e Leis', 'Aplica a recolha de impostos respeitando período fiscal', 'ImpostoInput'),
+    },
+    '/impostos/historico': {
+      get: listOperation('Monarquia e Leis', 'Consulta o histórico financeiro de arrecadação de tributos', ['reinoId', 'periodoFiscal']),
+    },
   },
 };
 

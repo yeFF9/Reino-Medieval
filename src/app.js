@@ -19,6 +19,7 @@ app.use('/api/v1/territorios', require('./routes/territorio-routes'));
 app.use('/api/v1/cidades', require('./routes/cidade-routes'));
 app.use('/api/v1/exercitos', require('./routes/exercito-routes'));
 app.use('/api/v1/guerras', require('./routes/guerra-routes'));
+app.use('/api/v1/leis', require('./routes/lei-routes'));
 
 app.use((req, res) => res.status(404).json({ error: 'Rota não encontrada' }));
 app.use(errorHandler);
