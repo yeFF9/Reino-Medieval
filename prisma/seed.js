@@ -17,6 +17,18 @@ async function main() {
     ['exercitos:write', 'Administrar exércitos'],
     ['guerras:read', 'Consultar guerras'],
     ['guerras:write', 'Declarar e administrar guerras'],
+    ['comandantes:read', 'Consultar comandantes'],
+    ['comandantes:write', 'Administrar e promover comandantes'],
+    ['guardas:read', 'Consultar guardas e patrulhas'],
+    ['guardas:write', 'Alocar patrulhas de guardas'],
+    ['diplomacia:read', 'Consultar acordos diplomáticos'],
+    ['diplomacia:write', 'Firmar e romper acordos diplomáticos'],
+    ['tributos:read', 'Consultar tributos'],
+    ['tributos:write', 'Enviar tributos entre reinos'],
+    ['guildas:read', 'Consultar guildas e membros'],
+    ['guildas:write', 'Fundar guildas e encomendar produção'],
+    ['economia:read', 'Consultar a economia dos reinos'],
+    ['economia:write', 'Ajustar a economia dos reinos'],
   ];
 
   for (const [codigo, descricao] of permissions) {
@@ -30,9 +42,18 @@ async function main() {
   const rolePermissions = {
     ADMIN: permissions.map(([codigo]) => codigo),
     MONARCA: permissions.map(([codigo]) => codigo),
-    ESTRATEGISTA: ['reinos:read', 'territorios:read', 'exercitos:read', 'exercitos:write', 'guerras:read', 'guerras:write'],
-    DIPLOMATA: ['reinos:read', 'territorios:read', 'guerras:read'],
-    LEITOR: ['reinos:read', 'territorios:read', 'cidades:read', 'exercitos:read', 'guerras:read'],
+    ESTRATEGISTA: [
+      'reinos:read', 'territorios:read', 'exercitos:read', 'exercitos:write', 'guerras:read', 'guerras:write',
+      'comandantes:read', 'comandantes:write', 'guardas:read', 'guardas:write',
+    ],
+    DIPLOMATA: [
+      'reinos:read', 'territorios:read', 'guerras:read',
+      'diplomacia:read', 'diplomacia:write', 'tributos:read', 'tributos:write', 'economia:read',
+    ],
+    LEITOR: [
+      'reinos:read', 'territorios:read', 'cidades:read', 'exercitos:read', 'guerras:read',
+      'comandantes:read', 'guardas:read', 'diplomacia:read', 'tributos:read', 'guildas:read', 'economia:read',
+    ],
   };
 
   for (const [nome, codigos] of Object.entries(rolePermissions)) {
@@ -93,7 +114,7 @@ async function main() {
     create: { nome: 'Marchas de Gelo', descricao: 'Território disputado na fronteira norte', status: 'DISPUTADO', reinoId: valoria.id },
   });
 
-  await prisma.cidade.upsert({
+  const cidade = await prisma.cidade.upsert({
     where: { nome: 'Carvalho Real' },
     update: {},
     create: { nome: 'Carvalho Real', territorioId: territorio.id, populacao: 12000, estoqueAlimentos: 900, producaoAgricola: 120 },
@@ -130,6 +151,47 @@ async function main() {
       reinoAtacanteId: eldoria.id,
       reinoDefensorId: valoria.id,
       territorioId: fronteira.id,
+    },
+  });
+
+  await prisma.patrulha.upsert({
+    where: { id: '00000000-0000-4000-8000-000000000004' },
+    update: {},
+    create: { id: '00000000-0000-4000-8000-000000000004', cidadeId: cidade.id, contingente: 40 },
+  });
+
+  await prisma.diplomacia.upsert({
+    where: { reinoAId_reinoBId_tipo: { reinoAId: eldoria.id, reinoBId: valoria.id, tipo: 'ACORDO_COMERCIAL' } },
+    update: {},
+    create: { reinoAId: eldoria.id, reinoBId: valoria.id, tipo: 'ACORDO_COMERCIAL' },
+  });
+
+  const guilda = await prisma.guilda.upsert({
+    where: { nome: 'Guilda dos Ferreiros de Eldoria' },
+    update: {},
+    create: { nome: 'Guilda dos Ferreiros de Eldoria', oficio: 'Ferreiros', reinoId: eldoria.id },
+  });
+  await prisma.guildaMembro.upsert({
+    where: { id: '00000000-0000-4000-8000-000000000005' },
+    update: {},
+    create: {
+      id: '00000000-0000-4000-8000-000000000005',
+      guildaId: guilda.id,
+      nome: 'Berta, a Forjadora',
+      especialidade: 'Armaduras',
+    },
+  });
+  await prisma.encomenda.upsert({
+    where: { id: '00000000-0000-4000-8000-000000000006' },
+    update: {},
+    create: {
+      id: '00000000-0000-4000-8000-000000000006',
+      guildaId: guilda.id,
+      item: 'ARMAS',
+      quantidade: 25,
+      custoOuro: 500,
+      custoFerro: 250,
+      status: 'CONCLUIDA',
     },
   });
 
