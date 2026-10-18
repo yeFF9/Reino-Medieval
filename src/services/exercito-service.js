@@ -3,6 +3,7 @@ const HttpError = require('../utils/http-error');
 const { paginatedResult } = require('../utils/pagination');
 
 const MINIMUM_COMMANDER_RANK = 3;
+const MAINTENANCE_PER_SOLDIER = Number(process.env.MAINTENANCE_PER_SOLDIER || 0.05);
 
 async function list(query) {
   const where = {
@@ -52,7 +53,10 @@ async function mobilize(id) {
         data: { ouro: { decrement: min.ouro }, alimentos: { decrement: min.alimentos }, ferro: { decrement: min.ferro } },
       });
       if (updated.count !== 1) throw new HttpError(409, 'Os recursos do reino foram alterados; tente novamente');
-      return tx.exercito.update({ where: { id }, data: { status: 'MOBILIZADO' } });
+      return tx.exercito.update({
+        where: { id },
+        data: { status: 'MOBILIZADO', custoManutencao: army.efetivo * MAINTENANCE_PER_SOLDIER },
+      });
     }, { isolationLevel: 'Serializable' });
   } catch (error) {
     if (error.code === 'P2034') throw new HttpError(409, 'Conflito ao mobilizar o exército; tente novamente');
@@ -60,4 +64,32 @@ async function mobilize(id) {
   }
 }
 
-module.exports = { list, create, mobilize };
+async function desmobilizar(id) {
+  const army = await prisma.exercito.findUnique({ where: { id } });
+  if (!army) throw new HttpError(404, 'Exército não encontrado');
+  if (army.status === 'DISPONIVEL') throw new HttpError(409, 'O exército já está desmobilizado');
+  // Zera o custo de manutenção ao desmobilizar as unidades ativas.
+  return prisma.exercito.update({
+    where: { id },
+    data: { status: 'DISPONIVEL', custoManutencao: 0 },
+  });
+}
+
+async function designarComandante(id, { comandanteId }) {
+  const [army, commander] = await Promise.all([
+    prisma.exercito.findUnique({ where: { id } }),
+    prisma.comandante.findUnique({ where: { id: comandanteId } }),
+  ]);
+  if (!army) throw new HttpError(404, 'Exército não encontrado');
+  if (!commander) throw new HttpError(404, 'Comandante não encontrado');
+  if (commander.nivelPatente < MINIMUM_COMMANDER_RANK) {
+    throw new HttpError(422, `O comandante precisa ter patente de nível ${MINIMUM_COMMANDER_RANK} ou superior`);
+  }
+  return prisma.exercito.update({
+    where: { id },
+    data: { comandanteId },
+    include: { comandante: true, reino: { select: { id: true, nome: true } } },
+  });
+}
+
+module.exports = { list, create, mobilize, desmobilizar, designarComandante };

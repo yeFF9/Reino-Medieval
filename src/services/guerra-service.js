@@ -39,7 +39,7 @@ async function history(query) {
     defensor: { select: { id: true, nome: true } },
     territorio: { select: { id: true, nome: true } },
     vencedor: { select: { id: true, nome: true } },
-  });
+  }, { declaradaEm: 'desc' });
 }
 
 async function finalize({ guerraId, vencedorId }) {
