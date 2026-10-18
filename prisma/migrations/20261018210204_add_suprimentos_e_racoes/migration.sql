@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Cidade" ADD COLUMN     "estoqueRacoes" DOUBLE PRECISION NOT NULL DEFAULT 0,
+ALTER COLUMN "populacao" SET DEFAULT 100,
+ALTER COLUMN "estoqueAlimentos" SET DEFAULT 200;

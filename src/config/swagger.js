@@ -174,8 +174,58 @@ const definition = {
           ferro: { type: 'number', minimum: 0 },
         },
       },
+      LeiInput: {
+        type: 'object',
+        required: ['titulo', 'reinoId'],
+        properties: {
+          titulo: { type: 'string', minLength: 2 },
+          descricao: { type: 'string' },
+          reinoId: { type: 'string', format: 'uuid' },
+        },
+      },
+      ImpostoInput: {
+        type: 'object',
+        required: ['reinoId', 'periodoFiscal', 'valor'],
+        properties: {
+          reinoId: { type: 'string', format: 'uuid' },
+          periodoFiscal: { type: 'string' },
+          valor: { type: 'number', minimum: 0 },
+          descricao: { type: 'string' },
+        },
+      },
+      CasteloInput: {
+        type: 'object',
+        required: ['territorioId', 'capacidadeGuardas'],
+        properties: {
+          territorioId: { type: 'string', format: 'uuid' },
+          capacidadeGuardas: { type: 'integer', minimum: 1 },
+        },
+      },
+      RecursoReinoInput: {
+        type: 'object',
+        required: ['reinoId'],
+        properties: {
+          reinoId: { type: 'string', format: 'uuid' },
+        },
+      },
+      ColheitaInput: {
+        type: 'object',
+        required: ['cidadeId', 'quantidadeBruta'],
+        properties: {
+          cidadeId: { type: 'string', format: 'uuid' },
+          quantidadeBruta: { type: 'number', minimum: 1 },
+        },
+      },
+      ConversaoRacaoInput: {
+        type: 'object',
+        required: ['percentualRacao'],
+        properties: {
+          percentualRacao: { type: 'number', minimum: 0, maximum: 100, description: 'Percentual da colheita convertido em ração (ex: 50 para 50%)' },
+        },
+      },
     },
   },
+  
   paths: {
     '/auth/login': { post: bodyOperation('Autenticação', 'Autenticar e obter JWT', 'LoginRequest', '200') },
     '/auth/register': { post: bodyOperation('Autenticação', 'Registrar conta de leitor', 'RegisterRequest') },
@@ -189,6 +239,10 @@ const definition = {
         parameters: [idParameter],
         responses: { 200: response('Reino'), 401: response('Não autenticado'), 403: response('Sem permissão'), 404: response('Não encontrado') },
       },
+    },
+    '/reinos/{id}/economia': {
+      get: { ...secured('Reinos', 'Consultar a economia do reino'), parameters: [idParameter] },
+      patch: { ...bodyOperation('Reinos', 'Ajustar recursos do reino', 'EconomiaUpdate', '200'), parameters: [idParameter] },
     },
     '/territorios': {
       get: listOperation('Territórios', 'Listar territórios', ['nome', 'status', 'reinoId']),
@@ -208,6 +262,12 @@ const definition = {
     '/exercitos/{id}/mobilizar': {
       patch: { ...secured('Exércitos', 'Mobilizar exército com débito de recursos'), parameters: [idParameter] },
     },
+    '/exercitos/{id}/desmobilizar': {
+      patch: { ...secured('Exército, Guardas e Patentes', 'Desmobilizar exército e zerar a manutenção'), parameters: [idParameter] },
+    },
+    '/exercitos/{id}/designar-comandante': {
+      patch: { ...bodyOperation('Exército, Guardas e Patentes', 'Designar comandante para um exército', 'DesignarComandanteInput', '200'), parameters: [idParameter] },
+    },
     '/guerras/declarar': { post: bodyOperation('Guerras e Diplomacia', 'Declarar guerra respeitando pactos de não agressão', 'GuerraInput') },
     '/guerras/historico': { get: listOperation('Guerras e Diplomacia', 'Consultar histórico de guerras', ['reinoId', 'status']) },
     '/guerras/{id}/finalizar': {
@@ -226,12 +286,6 @@ const definition = {
     },
     '/comandantes/{id}/promover': {
       patch: { ...bodyOperation('Exército, Guardas e Patentes', 'Promover a patente de um comandante', 'ComandantePromocao', '200'), parameters: [idParameter] },
-    },
-    '/exercitos/{id}/designar-comandante': {
-      patch: { ...bodyOperation('Exército, Guardas e Patentes', 'Designar comandante para um exército', 'DesignarComandanteInput', '200'), parameters: [idParameter] },
-    },
-    '/exercitos/{id}/desmobilizar': {
-      patch: { ...secured('Exército, Guardas e Patentes', 'Desmobilizar exército e zerar a manutenção'), parameters: [idParameter] },
     },
     '/guardas/patrulhas': {
       post: bodyOperation('Exército, Guardas e Patentes', 'Alocar contingente de guardas em patrulha', 'PatrulhaInput'),
@@ -264,9 +318,87 @@ const definition = {
     '/guildas/{id}/encomendas': {
       post: { ...bodyOperation('Guildas e Ofícios', 'Encomendar produção em massa com débito de recursos', 'GuildaEncomendaInput'), parameters: [idParameter] },
     },
-    '/reinos/{id}/economia': {
-      get: { ...secured('Reinos', 'Consultar a economia do reino'), parameters: [idParameter] },
-      patch: { ...bodyOperation('Reinos', 'Ajustar recursos do reino', 'EconomiaUpdate', '200'), parameters: [idParameter] },
+    '/leis': {
+      get: listOperation('Monarquia e Leis', 'Listar leis do reino', ['titulo', 'reinoId', 'status']),
+      post: bodyOperation('Monarquia e Leis', 'Decreta uma nova lei ou decreto', 'LeiInput'),
+    },
+    '/leis/{id}/revogar': {
+      put: {
+        ...secured('Monarquia e Leis', 'Revoga ou altera o estado de uma lei ativa', '200'),
+        parameters: [idParameter],
+      },
+    },
+    '/impostos/aplicar': {
+      post: bodyOperation('Monarquia e Leis', 'Aplica a recolha de impostos respeitando período fiscal', 'ImpostoInput'),
+    },
+    '/impostos/historico': {
+      get: listOperation('Monarquia e Leis', 'Consulta o histórico financeiro de arrecadação de tributos', ['reinoId', 'periodoFiscal']),
+    },
+    '/castelos': {
+      post: bodyOperation('Castelos', 'Registra a construção de um novo castelo', 'CasteloInput'),
+    },
+    '/castelos/{id}': {
+      get: {
+        ...secured('Castelos', 'Detalhes de integridade, nível de muralha e guarnição'),
+        parameters: [idParameter],
+      },
+    },
+    '/castelos/{id}/melhorar': {
+      patch: {
+        ...bodyOperation('Castelos', 'Realiza upgrade na infraestrutura consumindo recursos', 'RecursoReinoInput', '200'),
+        parameters: [idParameter],
+      },
+    },
+    '/castelos/{id}/reparar': {
+      post: {
+        ...bodyOperation('Castelos', 'Aplica reparos à estrutura do castelo', 'RecursoReinoInput', '200'),
+        parameters: [idParameter],
+      },
+    },
+    '/cidades/{id}/populacao': {
+      get: {
+        ...secured('População', 'Consulta censo demográfico da cidade'),
+        parameters: [idParameter],
+      },
+    },
+    '/cidades/{id}/populacao/mapa-fome': {
+      get: {
+        ...secured('População', 'Avalia o nível de segurança alimentar e a média de refeições diárias'),
+        parameters: [idParameter],
+      },
+    },
+    '/cidades/{id}/populacao/satisfacao': {
+      get: {
+        ...secured('População', 'Calcula o índice de satisfação popular (0-10) e a chance de revolta'),
+        parameters: [idParameter],
+      },
+    },
+    '/agricultura/colheitas': {
+      post: bodyOperation('Agricultura', 'Regista a entrada de grãos brutos colhidos', 'ColheitaInput'),
+    },
+    '/cidades/{id}/agricultura': {
+      get: {
+        ...secured('Agricultura', 'Consulta produção atual e estoque agrícola da cidade'),
+        parameters: [idParameter],
+      },
+    },
+    '/cidades/{id}/suprimentos': {
+      get: {
+        ...secured('Suprimentos', 'Verifica inventário de alimentos e alerta de reserva mínima'),
+        parameters: [idParameter],
+      },
+    },
+    '/cidades/{id}/racoes': {
+      get: {
+        ...secured('Suprimentos', 'Consulta o estoque exclusivo de rações militares'),
+        parameters: [idParameter],
+      },
+    },
+    '/cidades/{id}/suprimentos/converter': {
+      put: {
+        ...bodyOperation('Suprimentos', 'Converte percentual da colheita em rações militares', 'ConversaoRacaoInput', '200'),
+        parameters: [idParameter],
+      },
     },
   },
 };

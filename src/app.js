@@ -23,6 +23,11 @@ app.use('/api/v1/comandantes', require('./routes/comandante-routes'));
 app.use('/api/v1/guardas', require('./routes/guarda-routes'));
 app.use('/api/v1/diplomacia', require('./routes/diplomacia-routes'));
 app.use('/api/v1/guildas', require('./routes/guilda-routes'));
+app.use('/api/v1/leis', require('./routes/leis-routes'));
+app.use('/api/v1/castelos', require('./routes/castelo-routes'));
+app.use('/api/v1', require('./routes/populacao-routes'));
+app.use('/api/v1', require('./routes/agricultura-routes'));
+app.use('/api/v1', require('./routes/suprimento-routes'));
 
 app.use((req, res) => res.status(404).json({ error: 'Rota não encontrada' }));
 app.use(errorHandler);
