@@ -207,14 +207,22 @@ model Castelo {
   territorio        Territorio @relation(fields: [territorioId], references: [id], onDelete: Cascade)
 }
 
+enum StatusPatrulha {
+  ATIVA
+  ENCERRADA
+}
+
 model Patrulha {
-  id          String   @id @default(uuid()) @db.Uuid
-  cidadeId    String   @db.Uuid
+  id          String         @id @default(uuid()) @db.Uuid
+  cidadeId    String         @db.Uuid
   contingente Int
-  createdAt   DateTime @default(now())
-  cidade      Cidade   @relation(fields: [cidadeId], references: [id], onDelete: Cascade)
+  status      StatusPatrulha @default(ATIVA)
+  createdAt   DateTime       @default(now())
+  encerradaEm DateTime?
+  cidade      Cidade         @relation(fields: [cidadeId], references: [id], onDelete: Cascade)
 
   @@index([cidadeId])
+  @@index([status])
 }
 
 model Guilda {

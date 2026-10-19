@@ -25,7 +25,7 @@ npm run dev
 - Swagger UI: [`http://localhost:3000/api-docs`](http://localhost:3000/api-docs)
 - Health check: [`http://localhost:3000/health`](http://localhost:3000/health)
 
-Conta local criada pelo seed: `admin@eldoria.test` / `Eldoria123!`. Credencial somente para demonstração acadêmica; altere-a antes de qualquer uso compartilhado ou implantação.
+Login de autenticação: `admin@eldoria.test` / SENHA PARA AUTENTICAÇÃO:`Eldoria123!`
 
 ## Rotas
 
@@ -81,6 +81,21 @@ Conta local criada pelo seed: `admin@eldoria.test` / `Eldoria123!`. Credencial s
 | GET | `/castelos/:id` | `castelos:read` |
 | PATCH | `/castelos/:id/melhorar` | `castelos:write` |
 | POST | `/castelos/:id/reparar` | `castelos:write` |
+| GET | `/tributos` | `tributos:read` |
+| GET | `/tributos/:id` | `tributos:read` |
+| GET | `/tributos/balanco/:reinoId` | `tributos:read` |
+| PATCH | `/tributos/:id/estornar` | `tributos:write` |
+| GET | `/encomendas` | `guildas:read` |
+| GET | `/encomendas/:id` | `guildas:read` |
+| PATCH | `/encomendas/:id/concluir` | `guildas:write` |
+| PATCH | `/encomendas/:id/cancelar` | `guildas:write` |
+| GET | `/membros-guilda` | `guildas:read` |
+| POST | `/membros-guilda` | `guildas:write` |
+| PATCH | `/membros-guilda/:id/transferir` | `guildas:write` |
+| DELETE | `/membros-guilda/:id` | `guildas:write` |
+| GET | `/patrulhas` | `guardas:read` |
+| PATCH | `/patrulhas/:id/reforcar` | `guardas:write` |
+| PATCH | `/patrulhas/:id/encerrar` | `guardas:write` |
 
 Todas as listagens recebem `page` e `limit` (padrões 1 e 20, máximo 100) e filtros documentados no Swagger. O token deve ser enviado como `Authorization: Bearer <JWT>`.
 
@@ -100,5 +115,9 @@ Todas as listagens recebem `page` e `limit` (padrões 1 e 20, máximo 100) e fil
 - `breakPact` encerra o acordo e, se um reino for informado, aplica a penalização em ouro (`DIPLOMACY_BREAK_PENALTY_OURO`, padrão 50); `sendTribute` transfere ouro, alimentos e ferro entre as economias em transação serializável.
 - `createOrder` calcula o custo por item (`ARMAS`, `ARMADURAS`, `MATERIAIS_CONSTRUCAO`) e debita ouro e ferro do reino da guilda.
 - `adjustEconomy` credita (padrão) ou define os recursos do reino; `finalize` transfere o território disputado ao vencedor.
+- `refund` estorna somente tributos `ENVIADO` do tipo `OFERENDA_PAZ`, em até `TRIBUTE_REFUND_HOURS` (padrão 24) após o envio, e só se o destino ainda tiver os recursos; a devolução ocorre em transação serializável. `balance` desconsidera tributos estornados.
+- `complete` exige um artesão para cada `UNITS_PER_ARTISAN` (padrão 10) unidades da encomenda; `cancel` aceita apenas encomendas `PENDENTE` e devolve `ORDER_CANCEL_REFUND_RATE` (padrão 80%) do ouro e do ferro ao reino.
+- Guildas aceitam até `GUILD_MAX_MEMBERS` (padrão 50) membros, sem nomes repetidos; transferências só ocorrem entre guildas do mesmo reino, e nenhum artesão sai se a guilda ficar sem capacidade para as encomendas pendentes.
+- `reinforce` só reforça patrulhas `ATIVA`, retira os guardas do castelo e limita a patrulha a um guarda para cada `CITIZENS_PER_GUARD` (padrão 100) habitantes; `close` devolve os guardas ao castelo até a capacidade estrutural e dispensa o excedente.
 
 As rotinas internas estão em `src/services`; o schema, migration inicial e dados fictícios estão em `prisma/`.

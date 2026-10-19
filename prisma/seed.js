@@ -195,6 +195,34 @@ async function main() {
     },
   });
 
+  const carpinteiros = await prisma.guilda.upsert({
+    where: { nome: 'Guilda dos Carpinteiros de Eldoria' },
+    update: {},
+    create: { nome: 'Guilda dos Carpinteiros de Eldoria', oficio: 'Carpinteiros', reinoId: eldoria.id },
+  });
+  await prisma.guildaMembro.upsert({
+    where: { id: '00000000-0000-4000-8000-000000000007' },
+    update: {},
+    create: {
+      id: '00000000-0000-4000-8000-000000000007',
+      guildaId: carpinteiros.id,
+      nome: 'Osric, o Carpinteiro',
+      especialidade: 'Construção',
+    },
+  });
+  await prisma.encomenda.upsert({
+    where: { id: '00000000-0000-4000-8000-000000000008' },
+    update: {},
+    create: {
+      id: '00000000-0000-4000-8000-000000000008',
+      guildaId: carpinteiros.id,
+      item: 'MATERIAIS_CONSTRUCAO',
+      quantidade: 10,
+      custoOuro: 100,
+      custoFerro: 50,
+    },
+  });
+
   console.info('Seed concluído. Conta de demonstração: admin@eldoria.test / Eldoria123!');
 }
 

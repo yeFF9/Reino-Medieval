@@ -3,6 +3,11 @@ const assert = require('node:assert/strict');
 const { listTerritoriesSchema } = require('../src/validators/territorios');
 const { createCity, createPact, sendTribute, finalizeWar, createGuildOrder, updateEconomy } = require('../src/validators/resources');
 const { pagination } = require('../src/utils/pagination');
+const { tributeList } = require('../src/validators/tributos');
+const { orderList } = require('../src/validators/encomendas');
+const { createMember, transferMember } = require('../src/validators/membros-guilda');
+const { reinforcePatrol } = require('../src/validators/patrulhas');
+const { requiredArtisans } = require('../src/services/encomenda-service');
 
 test('territory list validates pagination and filters together', () => {
   const result = listTerritoriesSchema.safeParse({
@@ -67,4 +72,35 @@ test('economy update requires at least one non-negative resource', () => {
   assert.equal(updateEconomy.safeParse({ params, body: { ouro: 100 } }).success, true);
   assert.equal(updateEconomy.safeParse({ params, body: {} }).success, false);
   assert.equal(updateEconomy.safeParse({ params, body: { ouro: -5 } }).success, false);
+});
+
+test('tribute list accepts known filters and rejects unknown status', () => {
+  assert.equal(tributeList.safeParse({ query: { status: 'ENVIADO', tipo: 'OFERENDA_PAZ' } }).success, true);
+  assert.equal(tributeList.safeParse({ query: { status: 'PERDIDO' } }).success, false);
+});
+
+test('order list coerces the minimum quantity filter', () => {
+  const result = orderList.safeParse({ query: { item: 'ARMAS', quantidadeMinima: '5' } });
+  assert.equal(result.success, true);
+  assert.equal(result.data.query.quantidadeMinima, 5);
+});
+
+test('guild member admission requires guild, name and specialty', () => {
+  const guildaId = '00000000-0000-4000-8000-000000000001';
+  assert.equal(createMember.safeParse({ body: { guildaId, nome: 'Tomas', especialidade: 'Armas' } }).success, true);
+  assert.equal(createMember.safeParse({ body: { guildaId, nome: 'T' } }).success, false);
+  assert.equal(transferMember.safeParse({ params: { id: guildaId }, body: { guildaDestinoId: 'x' } }).success, false);
+});
+
+test('patrol reinforcement only accepts positive integers', () => {
+  const params = { id: '00000000-0000-4000-8000-000000000004' };
+  assert.equal(reinforcePatrol.safeParse({ params, body: { contingente: 10 } }).success, true);
+  assert.equal(reinforcePatrol.safeParse({ params, body: { contingente: 0 } }).success, false);
+  assert.equal(reinforcePatrol.safeParse({ params, body: { contingente: 2.5 } }).success, false);
+});
+
+test('orders need one artisan for every ten units', () => {
+  assert.equal(requiredArtisans(10), 1);
+  assert.equal(requiredArtisans(25), 3);
+  assert.equal(requiredArtisans(0), 0);
 });

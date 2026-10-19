@@ -223,6 +223,22 @@ const definition = {
           percentualRacao: { type: 'number', minimum: 0, maximum: 100, description: 'Percentual da colheita convertido em ração (ex: 50 para 50%)' },
         },
       },
+      MembroGuildaInput: {
+        type: 'object', required: ['guildaId', 'nome', 'especialidade'],
+        properties: {
+          guildaId: { type: 'string', format: 'uuid' },
+          nome: { type: 'string', minLength: 2 },
+          especialidade: { type: 'string', minLength: 2 },
+        },
+      },
+      TransferenciaMembroInput: {
+        type: 'object', required: ['guildaDestinoId'],
+        properties: { guildaDestinoId: { type: 'string', format: 'uuid' } },
+      },
+      ReforcoPatrulhaInput: {
+        type: 'object', required: ['contingente'],
+        properties: { contingente: { type: 'integer', minimum: 1, description: 'Quantidade de guardas a adicionar' } },
+      },
     },
   },
   
@@ -399,6 +415,49 @@ const definition = {
         ...bodyOperation('Suprimentos', 'Converte percentual da colheita em rações militares', 'ConversaoRacaoInput', '200'),
         parameters: [idParameter],
       },
+    },
+    '/tributos': {
+      get: listOperation('Tributos', 'Listar tributos trocados entre reinos', ['tipo', 'status', 'reinoOrigemId', 'reinoDestinoId']),
+    },
+    '/tributos/balanco/{reinoId}': {
+      get: { ...secured('Tributos', 'Balanço de tributos enviados e recebidos pelo reino'), parameters: [reinoPathParameter] },
+    },
+    '/tributos/{id}': {
+      get: { ...secured('Tributos', 'Consultar tributo'), parameters: [idParameter] },
+    },
+    '/tributos/{id}/estornar': {
+      patch: { ...secured('Tributos', 'Estornar oferenda de paz em até 24h, devolvendo os recursos'), parameters: [idParameter] },
+    },
+    '/encomendas': {
+      get: listOperation('Guildas e Ofícios', 'Listar encomendas das guildas', ['status', 'item', 'guildaId', 'quantidadeMinima']),
+    },
+    '/encomendas/{id}': {
+      get: { ...secured('Guildas e Ofícios', 'Consultar encomenda'), parameters: [idParameter] },
+    },
+    '/encomendas/{id}/concluir': {
+      patch: { ...secured('Guildas e Ofícios', 'Concluir encomenda conforme a capacidade de artesãos'), parameters: [idParameter] },
+    },
+    '/encomendas/{id}/cancelar': {
+      patch: { ...secured('Guildas e Ofícios', 'Cancelar encomenda pendente com reembolso parcial'), parameters: [idParameter] },
+    },
+    '/membros-guilda': {
+      get: listOperation('Guildas e Ofícios', 'Buscar artesãos em todas as guildas', ['nome', 'especialidade', 'guildaId']),
+      post: bodyOperation('Guildas e Ofícios', 'Admitir artesão em uma guilda', 'MembroGuildaInput'),
+    },
+    '/membros-guilda/{id}/transferir': {
+      patch: { ...bodyOperation('Guildas e Ofícios', 'Transferir artesão entre guildas do mesmo reino', 'TransferenciaMembroInput', '200'), parameters: [idParameter] },
+    },
+    '/membros-guilda/{id}': {
+      delete: { ...secured('Guildas e Ofícios', 'Desligar artesão da guilda'), parameters: [idParameter] },
+    },
+    '/patrulhas': {
+      get: listOperation('Exército, Guardas e Patentes', 'Listar patrulhas das cidades', ['status', 'cidadeId', 'contingenteMinimo']),
+    },
+    '/patrulhas/{id}/reforcar': {
+      patch: { ...bodyOperation('Exército, Guardas e Patentes', 'Reforçar patrulha com guardas do castelo', 'ReforcoPatrulhaInput', '200'), parameters: [idParameter] },
+    },
+    '/patrulhas/{id}/encerrar': {
+      patch: { ...secured('Exército, Guardas e Patentes', 'Encerrar patrulha e devolver guardas ao castelo'), parameters: [idParameter] },
     },
   },
 };
